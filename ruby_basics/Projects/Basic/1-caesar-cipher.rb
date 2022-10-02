@@ -1,28 +1,22 @@
-def caesar_cipher(text_to_shift, shift_factor) 
+def caesar_cipher(text_to_shift, shift_factor, result = '')
     text_to_shift.map { |char| 
         num = char.ord
         
-        # check if we have an A-Z or a-z letter
-        if (num >= 65 && num <= 122)
-            # uppercase out of bounds
-            if (num <= 90 && num + shift_factor > 90)
-                offset = 91 - num
-                num = 65 + shift_factor - offset
-            # lowercase out of bounds
-            elsif (num <=122 && num + shift_factor > 122)
-                offset = 123 - num
-                num = 97 + shift_factor - offset
-            # legal move, just do it.
-            else
-                num = num + shift_factor
-            end
-        ## not a letter, let's preserve it
-        else
-            num = num
-        end
+        # Check we have A-Z or a-z, if not, just pass through
+        if num.between?(65, 122)
+            # A-Z? or a-Z?
+            base = num < 91 ? 65 : 97
 
-        num.chr
-    }.join("")
+            # If our shift goes past "Z" || "z", we need to calc. by how much and add to respective "A" or "a".
+            if (num.between?(65, 91) && num + shift_factor > 91 || num.between?(97, 122) && num + shift_factor > 122)
+                num = base + shift_factor - (base + 26 - num)
+            else
+                num += shift_factor
+            end
+        end
+        result += num.chr
+    }
+    result
 end
 
 def collectUserInput()
