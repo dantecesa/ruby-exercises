@@ -20,10 +20,8 @@ class Game
     attr_accessor :current_player
     attr_accessor :num_moves
 
-    def initialize(player_one_name, player_two_name)
-        @players = []
-        @players << Player.new(player_one_name)
-        @players << Player.new(player_two_name)
+    def initialize(player1, player2)
+        @players = [player1, player2]
         @current_player = players[0]
         
         @board = setup_board
@@ -70,10 +68,14 @@ class Game
     end
     
     def check_for_win()
-        m = Matrix.rows(@board)
+        rows = Matrix.rows(@board)
+        rows.each_with_index do |e, row, col|
+            return true if rows.row(row).all?("X") || rows.row(row).all?("O")
+        end
 
-        m.each_with_index do |e, row, col|
-            return true if m.row(row).all?("X") || m.row(row).all?("O")
+        columns = Matrix.rows(@board)
+        columns.each_with_index do |e, row, col|
+            return true if columns.column(col).all?("X") || columns.column(col).all?("O")
         end
     end
 
@@ -82,7 +84,9 @@ class Game
 
         while(legal_move == false)
             print "\nPlayer #{current_player.name} where would you like to place an \"#{current_player.mark}\" [0-9]? "
+            
             user_input = gets.chomp().downcase()
+
             if (place_input(user_input))
                 toggle_player()
                 legal_move = true
@@ -103,12 +107,14 @@ class Game
     end
 end
 
-def play_again()
+def ask_to_play_again(current_game)
+    old_game = current_game
     print "Do you want to play again [Y/N]? "
     input = gets.chomp().downcase()
 
     if (input == "y")
         current_game = nil
+        current_game = Game.new(old_game.players[0], old_game.players[1])
     else
         puts "Goodbye!" 
     end
@@ -128,11 +134,13 @@ def runtime()
         if (user_input == "y")
             print "Type a name for player one: "
             player_one_name = gets.chomp()
-
+            player1 = Player.new(player_one_name)
+            
             print "Type a name for player two: "
             player_two_name = gets.chomp()
+            player2 = Player.new(player_two_name)
 
-            current_game = Game.new(player_one_name, player_two_name)
+            current_game = Game.new(player1, player2)
         else 
             print "I didn't understand. Do you want to play a game [Y/N]? "
         end
@@ -144,17 +152,16 @@ def runtime()
 
         if current_game.check_for_win == true
             puts "🎉!! Player #{current_game.current_player.name} won!"
+
+            current_game.print_board()
+
             current_game.current_player.games_won += 1
-            current_game = false
-            play_again()
+            current_game = ask_to_play_again(current_game)
         end
         
-        puts "current_game.num_moves is #{current_game.num_moves}"
-
         if current_game.num_moves == 9
             puts "😞 looks like we have a draw!"
-            current_game = false
-            play_again()
+            current_game = ask_to_play_again(current_game)
         end
     end
 end
@@ -162,7 +169,6 @@ end
 puts "Welcome to Tic Tac Toe!"
 runtime()
 
-# game doesn't properly restart?
 # doesn't check for diagonals
 # wrong player listed as winning (because we already advanced current_player)
 # if you input nil, that'll transcribe as "9"
