@@ -18,6 +18,7 @@ end
 class Game
     attr_reader :players
     attr_accessor :current_player
+    attr_accessor :num_moves
 
     def initialize(player_one_name, player_two_name)
         @players = []
@@ -35,6 +36,7 @@ class Game
             res = translate_input(num)
             result[res[0]][res[1]] = num
         end 
+        @num_moves = 0
         result
     end
 
@@ -84,6 +86,7 @@ class Game
             if (place_input(user_input))
                 toggle_player()
                 legal_move = true
+                @num_moves += 1
             else 
                 puts "Illegal move. Please try again."
                 print_board()
@@ -97,6 +100,17 @@ class Game
         else
             @current_player = players[0]
         end
+    end
+end
+
+def play_again()
+    print "Do you want to play again [Y/N]? "
+    input = gets.chomp().downcase()
+
+    if (input == "y")
+        current_game = nil
+    else
+        puts "Goodbye!" 
     end
 end
 
@@ -131,16 +145,17 @@ def runtime()
         if current_game.check_for_win == true
             puts "🎉!! Player #{current_game.current_player.name} won!"
             current_game.current_player.games_won += 1
-            print "Do you want to play again [Y/N]? "
-            input = gets.chomp().downcase()
+            current_game = false
+            play_again()
+        end
+        
+        puts "current_game.num_moves is #{current_game.num_moves}"
 
-            if (input == "y")
-                current_game = nil
-            else
-                puts "Goodbye!"
-                current_game = false
-            end
-        end 
+        if current_game.num_moves == 9
+            puts "😞 looks like we have a draw!"
+            current_game = false
+            play_again()
+        end
     end
 end
 
@@ -149,6 +164,5 @@ runtime()
 
 # game doesn't properly restart?
 # doesn't check for diagonals
-# can't end up in a draw (if all spots are taken)
 # wrong player listed as winning (because we already advanced current_player)
 # if you input nil, that'll transcribe as "9"
