@@ -22,9 +22,14 @@ class Player
         self.name = name
         self.games_won = 0
 
-        self.mark = @@total_num_players % 2 == 0 ? "X".red : "O".blue
+        self.mark = @@total_num_players % 2 == 0 ? Tile::X : Tile::O
         @@total_num_players += 1
     end
+end
+
+class Tile
+    X = "X".red
+    O = "O".blue
 end
 
 class Game
@@ -66,7 +71,7 @@ class Game
         board_location = translate_input(input)
         tile = @board[board_location[0]][board_location[1]]
 
-        if (tile == "X".red || tile == "O".blue)
+        if (tile == Tile::X || tile == Tile::O)
             return false
         else 
             @board[board_location[0]][board_location[1]] = current_player.mark
@@ -81,12 +86,12 @@ class Game
     def check_for_win
         rows = Matrix.rows(@board)
         rows.each_with_index do |e, row, col|
-            return true if rows.row(row).all?("X".red) || rows.row(row).all?("O".blue)
+            return true if rows.row(row).all?(Tile::X) || rows.row(row).all?(Tile::O)
         end
 
         columns = Matrix.rows(@board)
         columns.each_with_index do |e, row, col|
-            return true if columns.column(col).all?("X".red) || columns.column(col).all?("O".blue)
+            return true if columns.column(col).all?(Tile::X) || columns.column(col).all?(Tile::O)
         end
 
         return true if check_left_to_right_diagonal
@@ -95,12 +100,12 @@ class Game
 
     def check_left_to_right_diagonal
         result = (0..2).map { |val| @board[val][val]}
-        return true if result.all?("X".red) || result.all?("Y".blue)
+        return true if result.all?(Tile::X) || result.all?("Y".blue)
     end
 
     def check_right_to_left_diagonal
         result = (0..2).map { |val| @board[val][2 - val]}
-        return true if result.all?("X".red) || result.all?("Y".blue)
+        return true if result.all?(Tile::X) || result.all?("Y".blue)
     end
 
     def play
