@@ -77,6 +77,19 @@ class Game
         columns.each_with_index do |e, row, col|
             return true if columns.column(col).all?("X") || columns.column(col).all?("O")
         end
+
+        return true if check_left_to_right_diagonal
+        return true if check_right_to_left_diagonal
+    end
+
+    def check_left_to_right_diagonal
+        result = (0..2).map { |val| @board[val][val]}
+        return true if result.all?("X") || result.all?("Y")
+    end
+
+    def check_right_to_left_diagonal
+        result = (0..2).map { |val| @board[val][2 - val]}
+        return true if result.all?("X") || result.all?("Y")
     end
 
     def play
@@ -171,5 +184,4 @@ end
 puts "Welcome to Tic Tac Toe!"
 runtime()
 
-# doesn't check for diagonals
 # if you input nil, that'll transcribe as "9"
