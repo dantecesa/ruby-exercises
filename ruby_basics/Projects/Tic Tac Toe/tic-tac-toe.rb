@@ -88,14 +88,26 @@ class Game
             user_input = gets.chomp().downcase()
 
             if (place_input(user_input))
-                toggle_player()
-                legal_move = true
-                @num_moves += 1
+                if check_for_win == true
+                    puts "🎉!! Player #{current_player.name} won!"
+        
+                    print_board()
+        
+                    current_player.games_won += 1
+                    return ask_to_play_again(self)
+                else
+                    toggle_player()
+                    legal_move = true
+                    @num_moves += 1
+                    self
+                end
             else 
                 puts "Illegal move. Please try again."
                 print_board()
+                self
             end
         end
+        self
     end
 
     def toggle_player
@@ -113,7 +125,6 @@ def ask_to_play_again(current_game)
     input = gets.chomp().downcase()
 
     if (input == "y")
-        current_game = nil
         current_game = Game.new(old_game.players[0], old_game.players[1])
     else
         puts "Goodbye!" 
@@ -148,16 +159,7 @@ def runtime()
 
     while (current_game)
         current_game.print_board
-        current_game.play
-
-        if current_game.check_for_win == true
-            puts "🎉!! Player #{current_game.current_player.name} won!"
-
-            current_game.print_board()
-
-            current_game.current_player.games_won += 1
-            current_game = ask_to_play_again(current_game)
-        end
+        current_game = current_game.play
         
         if current_game.num_moves == 9
             puts "😞 looks like we have a draw!"
@@ -170,5 +172,4 @@ puts "Welcome to Tic Tac Toe!"
 runtime()
 
 # doesn't check for diagonals
-# wrong player listed as winning (because we already advanced current_player)
 # if you input nil, that'll transcribe as "9"
