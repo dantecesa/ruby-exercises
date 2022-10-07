@@ -1,15 +1,29 @@
 require 'Matrix'
 
+class String
+    def colorize(color_code)
+      "\e[#{color_code}m#{self}\e[0m"
+    end
+  
+    def red
+      colorize(31)
+    end
+  
+    def blue
+      colorize(34)
+    end
+  end
+
 class Player
     attr_accessor :name, :mark, :games_won
-    @@count = 0
+    @@total_num_players = 0
 
     def initialize(name)
         self.name = name
         self.games_won = 0
 
-        @@count == 0 ? @mark = "X" : @mark = "O"
-        @@count += 1
+        self.mark = @@total_num_players % 2 == 0 ? "X".red : "O".blue
+        @@total_num_players += 1
     end
 end
 
@@ -35,23 +49,24 @@ class Game
     end
 
     def print_board
-        puts "\nThe board currently looks like this:"
-
+        puts "The board currently looks like this:"
+        puts ""
         @board.each_with_index do |line, rows| 
             line.each_with_index do |val, columns|
             print " #{val} "
             columns < 2 ? print("|") : print("")
             end
             
-            rows < 2 ? puts("\n--- --- ---\n") : puts("")
+            rows < 2 ? puts("\n---+---+---\n") : puts("")
         end
+        puts ""
     end
 
     def place_input(input)
         board_location = translate_input(input)
         tile = @board[board_location[0]][board_location[1]]
 
-        if (tile == "X" || tile == "O")
+        if (tile == "X".red || tile == "O".blue)
             return false
         else 
             @board[board_location[0]][board_location[1]] = current_player.mark
@@ -66,12 +81,12 @@ class Game
     def check_for_win
         rows = Matrix.rows(@board)
         rows.each_with_index do |e, row, col|
-            return true if rows.row(row).all?("X") || rows.row(row).all?("O")
+            return true if rows.row(row).all?("X".red) || rows.row(row).all?("O".blue)
         end
 
         columns = Matrix.rows(@board)
         columns.each_with_index do |e, row, col|
-            return true if columns.column(col).all?("X") || columns.column(col).all?("O")
+            return true if columns.column(col).all?("X".red) || columns.column(col).all?("O".blue)
         end
 
         return true if check_left_to_right_diagonal
@@ -80,27 +95,35 @@ class Game
 
     def check_left_to_right_diagonal
         result = (0..2).map { |val| @board[val][val]}
-        return true if result.all?("X") || result.all?("Y")
+        return true if result.all?("X".red) || result.all?("Y".blue)
     end
 
     def check_right_to_left_diagonal
         result = (0..2).map { |val| @board[val][2 - val]}
-        return true if result.all?("X") || result.all?("Y")
+        return true if result.all?("X".red) || result.all?("Y".blue)
     end
 
     def play
         legal_move = false
 
+        if @num_moves == 9
+            puts "😞 looks like we have a draw!\n"
+            current_game = ask_to_play_again(current_game)
+        end
+
         while(legal_move == false)
-            print "\nPlayer #{current_player.name} where would you like to place an \"#{current_player.mark}\" [0-9]? "
+            print "\nPlayer #{current_player.name}, where would you like to place an \"#{current_player.mark}\" [0-9]? "
             
             user_input = gets.chomp.downcase
 
-            if (place_input(user_input))
+            if (user_input != "" && place_input(user_input))
                 if check_for_win == true
+                    clear_terminal
                     puts "🎉!! Player #{current_player.name} won!"
         
+                    puts ""
                     print_board
+                    puts ""
         
                     current_player.games_won += 1
                     return ask_to_play_again(self)
@@ -111,7 +134,8 @@ class Game
                     self
                 end
             else 
-                puts "Illegal move. Please try again."
+                clear_terminal
+                puts "Illegal move.".red + " Please try again."
                 print_board
                 self
             end
@@ -152,14 +176,17 @@ def runtime
         end
 
         if (user_input == "y")
-            print "Type a name for player one: "
+            clear_terminal
+            print "Type a name for player one: ".red
             player_one_name = gets.chomp
             player1 = Player.new(player_one_name)
             
-            print "Type a name for player two: "
+            clear_terminal
+            print "Type a name for player two: ".blue
             player_two_name = gets.chomp
             player2 = Player.new(player_two_name)
-
+            
+            clear_terminal
             current_game = Game.new(player1, player2)
         else 
             print "I didn't understand. Do you want to play a game [Y/N]? "
@@ -169,15 +196,14 @@ def runtime
     while current_game
         current_game.print_board
         current_game = current_game.play
-        
-        if current_game.num_moves == 9
-            puts "😞 looks like we have a draw!"
-            current_game = ask_to_play_again(current_game)
-        end
+        clear_terminal
     end
 end
 
-puts "Welcome to Tic Tac Toe!"
-runtime
+def clear_terminal
+    puts "\e[H\e[2J"
+end
 
-# if you input nil, that'll transcribe as "9"
+clear_terminal
+puts "Welcome to " + "Tic Tac Toe!".blue
+runtime
