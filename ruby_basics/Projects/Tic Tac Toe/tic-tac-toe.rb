@@ -47,7 +47,6 @@ class Board
     end
 
     def to_s
-        puts "The board currently looks like this:"
         puts ""
         @board.each_with_index do |line, rows| 
             line.each_with_index do |val, columns|
@@ -89,6 +88,12 @@ class Game
         @num_moves = 0
     end
 
+    def reset
+        self.board = Board.new(3)
+        self.toggle_current_player
+        @num_moves = 0
+    end
+
     def place_input(input)
         board.attempt_save_at(input, current_player)
     end
@@ -110,40 +115,45 @@ class Game
 
     def check_left_to_right_diagonal
         result = (0..2).map { |val| @board.board[val][val]}
-        return true if result.all?(Tile::X) || result.all?("Y".blue)
+        return true if result.all?(Tile::X) || result.all?(Tile::O)
     end
 
     def check_right_to_left_diagonal
         result = (0..2).map { |val| @board.board[val][2 - val]}
-        return true if result.all?(Tile::X) || result.all?("Y".blue)
+        return true if result.all?(Tile::X) || result.all?(Tile::O)
+    end
+
+    def valid_input?(input)
+        true if input =~ /[1-9]/ && input.length == 1
     end
 
     def play
         legal_move = false
 
         if @num_moves == 9
-            puts "😞 looks like we have a draw!\n"
-            current_game = ask_to_play_again(current_game)
+            puts "😞 looks like we have a draw!"
+            puts ""
+            ask_to_play_again(self)
         end
 
         while(legal_move == false)
-            print "\nPlayer #{current_player.name}, where would you like to place an \"#{current_player.mark}\" [0-9]? "
+            print "\nPlayer #{current_player.name}, where would you like to place an \"#{current_player.mark}\" [1-9]? "
             
             user_inputted_tile = gets.chomp.downcase
 
-            if (user_inputted_tile != "" && place_input(user_inputted_tile))
+            if (valid_input?(user_inputted_tile) && place_input(user_inputted_tile))
                 if check_for_win == true
                     clear_terminal
-                    puts "🎉!! Player #{current_player.name} won!"
+                    puts "Player #{current_player.name} won 🎉!"
         
                     puts ""
                     board.to_s
                     puts ""
         
                     current_player.games_won += 1
-                    return ask_to_play_again(self)
+                    ask_to_play_again(self)
                 else
-                    toggle_player
+                    toggle_current_player
                     legal_move = true
                     @num_moves += 1
                     self
@@ -158,7 +168,7 @@ class Game
         self
     end
 
-    def toggle_player
+    def toggle_current_player
         if @current_player == players[0]
             @current_player = players[1]
         else
@@ -168,14 +178,17 @@ class Game
 end
 
 def ask_to_play_again(current_game)
-    old_game = current_game
     print "Do you want to play again [Y/N]? "
     input = gets.chomp.downcase
 
     if (input == "y")
-        current_game = Game.new(old_game.players[0], old_game.players[1])
-    else
+        current_game.reset
+        clear_terminal
+        current_game.board.to_s
+    elsif (input == "n")
         puts "Goodbye!" 
+    else
+        puts "I didn't understand. Do you want to play another game [Y/N]? "
     end
 end
 
