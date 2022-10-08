@@ -12,7 +12,7 @@ class String
     def blue
       colorize(34)
     end
-  end
+end
 
 class Player
     attr_accessor :name, :mark, :games_won
@@ -32,28 +32,21 @@ class Tile
     O = "O".blue
 end
 
-class Game
-    attr_accessor :players, :current_player, :num_moves, :board
+class Board
+    attr_accessor :board
 
-    def initialize(player1, player2)
-        self.players = [player1, player2]
-        self.current_player = players[0]
-        
-        self.board = setup_board
-    end
+    def initialize(size)
+        self.board = Array.new(size) { Array.new(size) { "-" } }
 
-    def setup_board
-        result = Array.new(3) { Array.new(3) { "-" } }
-        
         (1..9).each do |num|
-            res = translate_input(num)
-            result[res[0]][res[1]] = num
+            coordinate = translate_input_to_tile(num)
+            self.board[coordinate[0]][coordinate[1]] = num
         end 
-        @num_moves = 0
-        result
+
+        board
     end
 
-    def print_board
+    def to_s
         puts "The board currently looks like this:"
         puts ""
         @board.each_with_index do |line, rows| 
@@ -67,29 +60,46 @@ class Game
         puts ""
     end
 
-    def place_input(input)
-        board_location = translate_input(input)
-        tile = @board[board_location[0]][board_location[1]]
+    def translate_input_to_tile(input)
+        ((input.to_i) - 1).divmod(3)
+    end
 
+    def attempt_save_at(input, current_player)
+        coordinates = translate_input_to_tile(input)
+
+        tile = board[coordinates[0]][coordinates[1]]
+        
         if (tile == Tile::X || tile == Tile::O)
             return false
         else 
-            @board[board_location[0]][board_location[1]] = current_player.mark
+            board[coordinates[0]][coordinates[1]] = current_player.mark
             return true
         end
     end
+end
 
-    def translate_input(input)
-        ((input.to_i) - 1).divmod(3)
+class Game
+    attr_accessor :players, :current_player, :num_moves, :board
+
+    def initialize(player1, player2)
+        self.players = [player1, player2]
+        self.current_player = players[0]
+        
+        self.board = Board.new(3)
+        @num_moves = 0
+    end
+
+    def place_input(input)
+        board.attempt_save_at(input, current_player)
     end
     
     def check_for_win
-        rows = Matrix.rows(@board)
+        rows = Matrix.rows(@board.board)
         rows.each_with_index do |e, row, col|
             return true if rows.row(row).all?(Tile::X) || rows.row(row).all?(Tile::O)
         end
 
-        columns = Matrix.rows(@board)
+        columns = Matrix.rows(@board.board)
         columns.each_with_index do |e, row, col|
             return true if columns.column(col).all?(Tile::X) || columns.column(col).all?(Tile::O)
         end
@@ -99,12 +109,12 @@ class Game
     end
 
     def check_left_to_right_diagonal
-        result = (0..2).map { |val| @board[val][val]}
+        result = (0..2).map { |val| @board.board[val][val]}
         return true if result.all?(Tile::X) || result.all?("Y".blue)
     end
 
     def check_right_to_left_diagonal
-        result = (0..2).map { |val| @board[val][2 - val]}
+        result = (0..2).map { |val| @board.board[val][2 - val]}
         return true if result.all?(Tile::X) || result.all?("Y".blue)
     end
 
@@ -119,15 +129,15 @@ class Game
         while(legal_move == false)
             print "\nPlayer #{current_player.name}, where would you like to place an \"#{current_player.mark}\" [0-9]? "
             
-            user_input = gets.chomp.downcase
+            user_inputted_tile = gets.chomp.downcase
 
-            if (user_input != "" && place_input(user_input))
+            if (user_inputted_tile != "" && place_input(user_inputted_tile))
                 if check_for_win == true
                     clear_terminal
                     puts "🎉!! Player #{current_player.name} won!"
         
                     puts ""
-                    print_board
+                    board.to_s
                     puts ""
         
                     current_player.games_won += 1
@@ -141,7 +151,7 @@ class Game
             else 
                 clear_terminal
                 puts "Illegal move.".red + " Please try again."
-                print_board
+                board.to_s
                 self
             end
         end
@@ -199,7 +209,7 @@ def runtime
     end
 
     while current_game
-        current_game.print_board
+        current_game.board.to_s
         current_game = current_game.play
         clear_terminal
     end
