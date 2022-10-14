@@ -6,21 +6,19 @@ def clean_zipcode(zipcode)
   zipcode.to_s.rjust(5, '0')[0..4]
 end
 
-def clean_phone_number(phone_number)
-  phone = phone_number
+def clean_phone_number(phone)
+  if phone.length != 10
+    phone.gsub!(" ", "")
+    phone.gsub!("-", "")
+    phone.gsub!(".", "")
+    phone.gsub!("(", "")
+    phone.gsub!(")", "")
+  end
 
   if phone.length == 11
     if phone[0] == '1'
       phone = phone[1..]
     end
-  end
-
-  if phone.length != 10
-    phone = phone.gsub(" ", "")
-    phone = phone.gsub("-", "")
-    phone = phone.gsub(".", "")
-    phone = phone.gsub("(", "")
-    phone = phone.gsub(")", "")
   end
 
   if phone.length == 10
@@ -67,7 +65,6 @@ def print_most_popular_registration_date_times(popular_registration_times, popul
   puts "The most popular registration time is: #{popular_registration_times.max_by {|_,value| value}[0]}:00"
 
   print "The most popular registration weekday is: "
-
   case popular_registration_days.max_by {|_,value| value}[0]
   when 0
     print 'Monday'
@@ -103,6 +100,7 @@ contents.each do |row|
     registration_date = DateTime.strptime(row[:regdate], '%m/%d/%y %H:%M')
     calculate_most_popular_registration_time_and_day(popular_registration_times, popular_registration_days, registration_date)
 
+    # puts "#{name} #{phone}"
     # legislators = legislators_by_zip_code(zipcode)
     # form_letter = erb_template.result(binding)
     # save_thank_you_letter(id, form_letter)
